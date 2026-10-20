@@ -2,7 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Code2, Figma, FileText, CheckCircle2 } from "lucide-react";
+import { Code2, Layers, CheckCircle2 } from "lucide-react";
 
 export default function HeroWorkspace() {
   return (
@@ -79,16 +79,16 @@ export default function HeroWorkspace() {
           <span className="text-xs font-mono font-bold text-neutral-800">VS Code</span>
         </motion.div>
 
-        {/* Floating Tool Badge: Figma */}
+        {/* Floating Tool Badge: Layers */}
         <motion.div
           animate={{ y: [0, -8, 0] }}
           transition={{ repeat: Infinity, duration: 7, ease: "easeInOut", delay: 2 }}
           className="absolute bottom-32 left-28 p-3 bg-white border border-neutral-200 rounded-2xl shadow-lg pointer-events-auto flex items-center gap-2"
         >
           <div className="w-8 h-8 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center">
-            <Figma className="w-5 h-5" />
+            <Layers className="w-5 h-5" />
           </div>
-          <span className="text-xs font-mono font-bold text-neutral-800">Figma Ready</span>
+          <span className="text-xs font-mono font-bold text-neutral-800">Design Systems</span>
         </motion.div>
 
         {/* Floating Mini UI Preview Card */}
