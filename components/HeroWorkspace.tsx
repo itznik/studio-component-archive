@@ -2,94 +2,86 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Sparkles, Terminal, Code2, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 
 export default function HeroWorkspace() {
   return (
-    <section className="relative min-h-[92vh] flex flex-col items-center justify-center pt-40 pb-24 px-6 overflow-hidden">
+    <section className="relative min-h-[90vh] flex flex-col justify-center pt-32 pb-20 px-6 max-w-7xl mx-auto">
       
-      {/* Editorial Badge Pill */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="mb-8 px-5 py-2 bg-white border border-neutral-300 rounded-full shadow-xs flex items-center gap-2.5 text-xs font-mono text-neutral-700 uppercase tracking-wider"
-      >
-        <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-        <span>HIGH-FIDELITY DESIGN SYSTEMS FOR ELITE BUILDERS</span>
-      </motion.div>
-
-      {/* Massive Editorial Headline */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="text-center max-w-5xl mx-auto z-10"
-      >
-        <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-extrabold tracking-tight text-neutral-900 leading-[0.95]">
-          Engineered <br />
-          <span className="font-light italic text-neutral-400 font-serif">components</span> for the web.
-        </h1>
-        <p className="mt-8 text-lg md:text-xl text-neutral-600 max-w-2xl mx-auto font-normal leading-relaxed">
-          Hand-crafted visual systems, reactive motion blocks, and high-weight UI modules built to break away from generic AI templates.
-        </p>
-      </motion.div>
-
-      {/* High-Impact Action Buttons */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.8 }}
-        className="mt-12 flex flex-col sm:flex-row items-center gap-4 z-10 w-full sm:w-auto justify-center"
-      >
-        <a 
-          href="#catalog"
-          className="w-full sm:w-auto px-8 py-4 bg-black text-white text-sm font-semibold rounded-full hover:bg-blue-600 transition-all shadow-md flex items-center justify-center gap-2 group"
-        >
-          <span>Explore Component Vault</span>
-          <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-        </a>
-        <a 
-          href="/pricing"
-          className="w-full sm:w-auto px-8 py-4 bg-white border border-neutral-300 text-neutral-900 text-sm font-semibold rounded-full hover:bg-neutral-100 transition-all text-center shadow-xs"
-        >
-          View All-Access Pass
-        </a>
-      </motion.div>
-
-      {/* Floating Studio Cards (Visible on larger screens) */}
-      <div className="absolute inset-0 pointer-events-none max-w-7xl mx-auto hidden lg:block overflow-hidden">
+      {/* Editorial Top Grid Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
         
-        {/* Floating Card 1 */}
-        <motion.div
-          animate={{ y: [0, -15, 0] }}
-          transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
-          className="absolute top-44 left-8 p-5 bg-white/95 backdrop-blur-md border border-neutral-300 rounded-2xl shadow-xl w-72 text-left pointer-events-auto"
+        {/* Left Column: Massive Editorial Typography */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="lg:col-span-7"
         >
-          <div className="flex items-center justify-between pb-3 mb-3 border-b border-neutral-200 text-xs font-mono text-neutral-400">
-            <span>motion.tsx</span>
-            <Terminal className="w-3.5 h-3.5 text-blue-600" />
-          </div>
-          <p className="font-mono text-xs text-neutral-700">
-            {`const spring = { stiffness: 400, damping: 30 };`}
+          <span className="text-xs font-mono uppercase tracking-widest text-neutral-500 mb-4 block">
+            UI/UX Component Studio & Vault
+          </span>
+          <h1 className="text-6xl sm:text-7xl lg:text-8xl font-serif tracking-tight text-neutral-900 leading-[1.02]">
+            High-end design <br />
+            <span className="italic font-normal text-neutral-600">without the</span> AI noise.
+          </h1>
+          <p className="mt-8 text-lg md:text-xl text-neutral-600 max-w-xl font-light leading-relaxed">
+            Meticulously engineered components, razor-sharp vector SVGs, and fluid motion systems built for elite web creators.
           </p>
-          <div className="mt-4 flex items-center gap-2">
-            <span className="px-2.5 py-1 bg-blue-50 text-blue-600 text-[10px] font-mono font-bold rounded-md">PRO ASSET</span>
+
+          <div className="mt-10 flex flex-wrap items-center gap-4">
+            <a 
+              href="#catalog"
+              className="px-8 py-4 bg-neutral-900 text-white text-sm font-medium rounded-full hover:bg-blue-600 transition-all shadow-md flex items-center gap-2 group"
+            >
+              <span>Explore Component Vault</span>
+              <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            </a>
+            <a 
+              href="/pricing"
+              className="px-8 py-4 bg-transparent border border-neutral-300 text-neutral-900 text-sm font-medium rounded-full hover:bg-neutral-200/50 transition-all"
+            >
+              View Pricing Matrix
+            </a>
           </div>
         </motion.div>
 
-        {/* Floating Card 2 */}
+        {/* Right Column: Visual Weight Showcase Frame (Replacing floating garbage cards) */}
         <motion.div
-          animate={{ y: [0, 15, 0] }}
-          transition={{ repeat: Infinity, duration: 7, ease: "easeInOut", delay: 1 }}
-          className="absolute top-52 right-12 p-4 bg-white/95 backdrop-blur-md border border-neutral-300 rounded-2xl shadow-xl pointer-events-auto flex items-center gap-3.5"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.9, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          className="lg:col-span-5 relative"
         >
-          <div className="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center font-mono text-sm font-bold">
-            UI
-          </div>
-          <div>
-            <p className="text-sm font-bold text-neutral-900">Interactive Bento</p>
-            <p className="text-xs text-neutral-400 font-mono">Status: Verified</p>
+          <div className="w-full aspect-[4/5] bg-white border border-neutral-300 rounded-3xl p-6 shadow-xl flex flex-col justify-between overflow-hidden relative group">
+            
+            {/* Top Bar of Showcase Card */}
+            <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-neutral-200" />
+                <span className="w-3 h-3 rounded-full bg-neutral-200" />
+                <span className="w-3 h-3 rounded-full bg-neutral-200" />
+              </div>
+              <span className="text-xs font-mono text-neutral-400">preview_v2.tsx</span>
+            </div>
+
+            {/* Center Visual Mockup Area */}
+            <div className="my-auto py-12 flex flex-col items-center justify-center text-center">
+              <div className="w-20 h-20 rounded-2xl bg-neutral-900 text-white flex items-center justify-center font-serif text-3xl shadow-lg mb-6 group-hover:scale-105 transition-transform duration-500">
+                ✦
+              </div>
+              <h3 className="text-xl font-serif text-neutral-900 font-medium">Bento Motion Module</h3>
+              <p className="text-sm text-neutral-500 mt-2 max-w-xs font-light">
+                Interactive radial gradients & physics spring damping.
+              </p>
+            </div>
+
+            {/* Bottom Bar of Showcase Card */}
+            <div className="pt-4 border-t border-neutral-100 flex items-center justify-between text-xs font-mono text-neutral-500">
+              <span>Tailwind + Framer</span>
+              <span className="text-blue-600 font-medium">PRO ASSET</span>
+            </div>
+
           </div>
         </motion.div>
 
