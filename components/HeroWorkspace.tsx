@@ -1,225 +1,423 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Code2, Layers, CheckCircle2, Sliders, Sparkles, Copy, Check } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+  useTransform,
+  type MotionValue,
+} from "framer-motion";
+import { ArrowUpRight } from "lucide-react";
 
-export default function HeroWorkspace() {
-  const [activeTab, setActiveTab] = useState<"preview" | "code">("preview");
-  const [copied, setCopied] = useState(false);
-  const [interactiveMode, setInteractiveMode] = useState(true);
+type Pointer = { x: MotionValue<number>; y: MotionValue<number> };
 
-  const handleCopy = () => {
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+const enter = { type: "spring", stiffness: 90, damping: 20, mass: 1 } as const;
+const follow = { stiffness: 60, damping: 20, mass: 0.9 };
+
+/* ───────── Floating wrapper: pointer + scroll parallax, spring entrance, idle drift ───────── */
+function Float({
+  className = "",
+  depth,
+  rotate = 0,
+  delay = 0,
+  pointer,
+  children,
+}: {
+  className?: string;
+  depth: number;
+  rotate?: number;
+  delay?: number;
+  pointer: Pointer;
+  children: ReactNode;
+}) {
+  const reduce = useReducedMotion();
+  const { scrollY } = useScroll();
+  const x = useTransform(pointer.x, (v) => (reduce ? 0 : v * depth * 80));
+  const y = useTransform([pointer.y, scrollY], ([p, s]: number[]) =>
+    reduce ? 0 : p * depth * 80 + s * depth * 0.45
+  );
 
   return (
-    <section className="relative min-h-[92vh] flex flex-col items-center justify-center pt-36 pb-24 px-6 overflow-hidden">
-      
-      {/* Central Interactive Hero Content */}
-      <div className="text-center max-w-4xl mx-auto z-20 relative">
-        
-        {/* Interactive Mode Toggle Pill */}
-        <motion.div 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-4 py-1.5 bg-white border border-neutral-200 rounded-full shadow-xs mb-6 cursor-pointer hover:border-neutral-400 transition-all"
-          onClick={() => setInteractiveMode(!interactiveMode)}
+    <motion.div
+      style={{ x, y }}
+      className={`pointer-events-none absolute ${className}`}
+    >
+      <motion.div
+        style={{ rotate }}
+        initial={{ opacity: 0, scale: 0.92, y: 24 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ ...enter, delay: 0.4 + delay }}
+      >
+        <motion.div
+          animate={reduce ? undefined : { y: [0, -8, 0] }}
+          transition={{
+            duration: 6 + delay * 5,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
         >
-          <span className={`w-2 h-2 rounded-full ${interactiveMode ? "bg-emerald-500 animate-pulse" : "bg-neutral-400"}`} />
-          <span className="text-xs font-mono text-neutral-700">
-            Canvas Mode: <strong className="text-neutral-900">{interactiveMode ? "Active" : "Static"}</strong>
-          </span>
-          <Sliders className="w-3.5 h-3.5 text-neutral-400 ml-1" />
+          {children}
         </motion.div>
+      </motion.div>
+    </motion.div>
+  );
+}
 
-        <motion.h1 
-          initial={{ opacity: 0, y: 20 }}
+/* ───────── Canvas pieces ───────── */
+const Dots = () => (
+  <div className="flex gap-1 border-b border-[var(--line)] px-3 py-2">
+    {[0, 1, 2].map((i) => (
+      <span key={i} className="h-2 w-2 rounded-full border border-[var(--bd)]" />
+    ))}
+  </div>
+);
+
+function WireCard() {
+  return (
+    <div className="overflow-hidden rounded-xl border border-[var(--bd)] bg-white/80 shadow-[var(--shadow)]">
+      <Dots />
+      <div className="grid grid-cols-[1fr_1.5fr] gap-2 p-3">
+        <div className="space-y-2">
+          <span className="block h-6 w-6 rounded-full bg-black/10" />
+          <span className="block h-1.5 w-full rounded bg-black/10" />
+          <span className="block h-1.5 w-2/3 rounded bg-black/10" />
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <span className="col-span-2 h-8 rounded bg-black/[0.06]" />
+          <span className="h-10 rounded bg-black/[0.06]" />
+          <span className="h-10 rounded bg-[var(--blue)]" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChartCard() {
+  return (
+    <div className="rounded-2xl border border-[var(--bd)] bg-white p-3 shadow-[var(--shadow)]">
+      <p className="t-mono flex justify-between text-[var(--mute)]">
+        <span>Installs</span>
+        <span className="text-[var(--ink)]">4.5K</span>
+      </p>
+      <svg viewBox="0 0 160 70" fill="none" className="mt-2 w-full" aria-hidden>
+        <path d="M0 62H160M0 38H160M0 14H160" stroke="var(--line)" />
+        <path
+          d="M2 60L20 56 34 58 50 48 66 50 84 40 100 44 118 32 136 34 158 24"
+          stroke="#9a9a94"
+          strokeWidth="1.2"
+        />
+        <motion.path
+          d="M2 58L16 50 28 54 42 36 54 42 68 24 82 32 96 18 110 26 124 10 138 20 158 6"
+          stroke="var(--blue)"
+          strokeWidth="1.8"
+          strokeLinejoin="round"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 1.8, delay: 1, ease: [0.22, 1, 0.36, 1] }}
+        />
+      </svg>
+    </div>
+  );
+}
+
+function ImageFrame() {
+  return (
+    <div className="rounded-[22px] border border-[var(--bd)] bg-white p-1.5 shadow-[var(--shadow)]">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-[#0a0a0a]">
+        <div
+          className="absolute inset-0 blur-[10px]"
+          style={{
+            background:
+              "radial-gradient(46% 34% at 54% 34%, #fff 0%, #bcd2ff 38%, transparent 72%), radial-gradient(70% 46% at 40% 94%, #002fa7 0%, transparent 70%)",
+          }}
+        />
+        <span className="t-mono absolute bottom-2 left-2.5 text-white/70">
+          bento-hero
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function PhoneCard() {
+  return (
+    <div className="rounded-[26px] border border-[var(--bd)] bg-white p-2 shadow-[var(--shadow)]">
+      <div className="aspect-[9/16] space-y-2 rounded-[18px] bg-[var(--bg)] p-2.5">
+        <span className="mx-auto block h-1.5 w-8 rounded-full bg-black/15" />
+        <span className="block h-14 rounded-lg bg-black/[0.06]" />
+        <span className="block h-1.5 w-full rounded bg-black/10" />
+        <span className="block h-1.5 w-3/4 rounded bg-black/10" />
+        <span className="block h-6 rounded-full bg-[var(--blue)]" />
+      </div>
+    </div>
+  );
+}
+
+function Avatar() {
+  return (
+    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--ink)]">
+      <svg width="16" height="10" viewBox="0 0 16 10" aria-hidden>
+        <circle cx="3" cy="3" r="1.6" fill="#fff" />
+        <rect x="6" y="6.5" width="8" height="2" rx="1" fill="#fff" />
+      </svg>
+    </span>
+  );
+}
+
+function Bubble({ when, text }: { when: string; text: string }) {
+  return (
+    <div className="flex max-w-[250px] items-start gap-3 rounded-[28px] border border-[var(--line)] bg-white/90 py-3 pl-3 pr-5 shadow-[var(--shadow)] backdrop-blur-sm">
+      <Avatar />
+      <div>
+        <p className="flex items-baseline gap-2 text-sm">
+          <b className="font-semibold">Online</b>
+          <span className="t-mono text-[10px] text-[var(--mute)]">{when}</span>
+        </p>
+        <p className="mt-0.5 text-[15px] leading-snug tracking-[-0.01em]">
+          {text}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Cursor({
+  color,
+  label,
+  dark = false,
+}: {
+  color: string;
+  label: string;
+  dark?: boolean;
+}) {
+  return (
+    <div className="relative">
+      <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden style={{ color }}>
+        <path
+          d="M3 2l15 8-6.5 2L8.5 19z"
+          fill="currentColor"
+          stroke="#fff"
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <span
+        className="absolute left-4 top-5 whitespace-nowrap rounded-md px-2 py-0.5 text-[13px] font-medium"
+        style={{ background: color, color: dark ? "#0a0a0a" : "#fff" }}
+      >
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function Tool({ children }: { children: ReactNode }) {
+  return (
+    <div className="grid h-14 w-14 place-items-center rounded-2xl border border-[var(--line)] bg-white shadow-[var(--shadow)] md:h-16 md:w-16">
+      {children}
+    </div>
+  );
+}
+
+const FigmaIcon = () => (
+  <svg viewBox="0 0 24 36" className="h-7" aria-label="Figma" role="img">
+    <path d="M6 0h6v12H6a6 6 0 010-12z" fill="#f24e1e" />
+    <path d="M12 0h6a6 6 0 010 12h-6z" fill="#ff7262" />
+    <path d="M6 12h6v12H6a6 6 0 010-12z" fill="#a259ff" />
+    <circle cx="18" cy="18" r="6" fill="#1abcfe" />
+    <path d="M6 36a6 6 0 006-6v-6H6a6 6 0 000 12z" fill="#0acf83" />
+  </svg>
+);
+
+const CodeIcon = () => (
+  <svg viewBox="0 0 24 24" className="h-7" aria-label="VS Code" role="img">
+    <path d="M17.5 2.5l4.5 2.2v14.6l-4.5 2.2L8 13.5l-4 3-1.5-.8V8.3L4 7.5l4 3z" fill="#1f8ad2" />
+    <path d="M17.5 7.5v9L12 12z" fill="#fff" />
+  </svg>
+);
+
+const NotionIcon = () => (
+  <span
+    aria-label="Notion"
+    role="img"
+    className="grid h-7 w-7 place-items-center rounded-md border-2 border-[var(--ink)] font-serif text-[17px] font-bold leading-none"
+  >
+    N
+  </span>
+);
+
+const WpIcon = () => (
+  <span
+    aria-label="WordPress"
+    role="img"
+    className="grid h-8 w-8 place-items-center rounded-full border-2 border-[#3a3a3a] font-serif text-[15px] font-bold leading-none"
+  >
+    W
+  </span>
+);
+
+function AiToggle({ on, setOn }: { on: boolean; setOn: (v: boolean) => void }) {
+  return (
+    <div className="pointer-events-auto flex items-center gap-4 rounded-full border border-[var(--line)] bg-white/90 py-2.5 pl-6 pr-3 shadow-[var(--shadow)] backdrop-blur-sm">
+      <span id="ai-mode-label" className="text-lg tracking-[-0.02em]">
+        AI Mode
+      </span>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={on}
+        aria-labelledby="ai-mode-label"
+        onClick={() => setOn(!on)}
+        className={`flex h-9 w-16 items-center rounded-full p-1 transition-colors duration-200 ${
+          on ? "justify-end bg-[var(--blue)]" : "justify-start bg-black/15"
+        }`}
+      >
+        <motion.span
+          layout
+          transition={{ type: "spring", stiffness: 500, damping: 34 }}
+          className="h-7 w-7 rounded-full bg-white shadow"
+        />
+      </button>
+    </div>
+  );
+}
+
+/* ───────── Hero ───────── */
+const LINES = ["Components", "that love", "the web."];
+const HANDLES = ["-left-[5px] -top-[5px]", "-right-[5px] -top-[5px]", "-bottom-[5px] -left-[5px]", "-bottom-[5px] -right-[5px]"];
+
+export default function HeroWorkspace() {
+  const [ai, setAi] = useState(true);
+  const px = useMotionValue(0);
+  const py = useMotionValue(0);
+  const pointer: Pointer = { x: useSpring(px, follow), y: useSpring(py, follow) };
+
+  return (
+    <section
+      id="index"
+      onPointerMove={(e) => {
+        const r = e.currentTarget.getBoundingClientRect();
+        px.set((e.clientX - r.left) / r.width - 0.5);
+        py.set((e.clientY - r.top) / r.height - 0.5);
+      }}
+      onPointerLeave={() => {
+        px.set(0);
+        py.set(0);
+      }}
+      className="relative flex min-h-[920px] items-center justify-center overflow-hidden px-5 pb-24 pt-32 md:min-h-[100svh]"
+    >
+      {/* Canvas background items */}
+      <Float pointer={pointer} depth={0.35} rotate={-6} className="left-[-9%] top-[11%] w-[clamp(150px,48%,300px)] md:left-[2%] md:top-[15%]"><WireCard /></Float>
+      <Float pointer={pointer} depth={0.5} rotate={5} delay={0.1} className="right-[-7%] top-[12%] w-[clamp(150px,44%,300px)] md:right-[2%] md:top-[13%]"><ChartCard /></Float>
+      <Float pointer={pointer} depth={0.6} rotate={-5} delay={0.2} className="bottom-[8%] left-[-7%] w-[clamp(120px,38%,230px)] md:bottom-[10%] md:left-[4%]"><ImageFrame /></Float>
+      <Float pointer={pointer} depth={0.45} rotate={6} delay={0.25} className="bottom-[6%] right-[-5%] w-[clamp(96px,30%,170px)] md:bottom-[9%] md:right-[5%]"><PhoneCard /></Float>
+
+      <Float pointer={pointer} depth={0.7} delay={0.15} className="left-[20%] top-[22%] md:left-[27%] md:top-[10%]"><AiToggle on={ai} setOn={setAi} /></Float>
+      <Float pointer={pointer} depth={0.8} delay={0.3} className="hidden left-[4%] top-[34%] sm:block md:left-[3%] md:top-[50%]"><Bubble when="yesterday" text="Let’s try a wider grid." /></Float>
+      <Float pointer={pointer} depth={0.8} delay={0.35} className="bottom-[25%] left-[7%] md:bottom-[38%] md:left-auto md:right-[4%]"><Bubble when="right now" text="Built to order, not off the shelf." /></Float>
+
+      <Float pointer={pointer} depth={1} delay={0.1} className="right-[9%] top-[29%] md:right-[22%] md:top-[18%]"><Tool><FigmaIcon /></Tool></Float>
+      <Float pointer={pointer} depth={0.9} delay={0.2} className="left-[4%] top-[20%] md:left-[18%] md:top-[30%]"><Tool><CodeIcon /></Tool></Float>
+      <Float pointer={pointer} depth={0.9} delay={0.3} className="bottom-[26%] right-[8%] md:bottom-[22%] md:right-[20%]"><Tool><NotionIcon /></Tool></Float>
+      <Float pointer={pointer} depth={1} delay={0.4} className="bottom-[4%] left-[38%] md:bottom-[8%] md:left-[30%]"><Tool><WpIcon /></Tool></Float>
+
+      <Float pointer={pointer} depth={1.1} delay={0.2} className="left-[42%] top-[10%] md:left-[22%] md:top-[12%]"><Cursor color="#d63ad0" label="UX Designer" /></Float>
+      <Float pointer={pointer} depth={1.1} delay={0.3} className="left-[17%] top-[26%] md:left-[16%] md:top-[40%]"><Cursor color="#f7b500" label="Developer" dark /></Float>
+
+      {/* Headline / Center Object */}
+      <div className="relative z-10 flex max-w-3xl flex-col items-center text-center">
+        <p className="t-mono flex items-center gap-2 rounded-full border border-[var(--line)] bg-white/80 px-3 py-1.5 text-[var(--mute)] backdrop-blur-sm">
+          <span className="h-1.5 w-1.5 rounded-full bg-[var(--blue)]" />
+          248 components
+          <span className="text-[var(--bd)]">//</span>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={ai ? "ai" : "hand"}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.15 }}
+              className="text-[var(--ink)]"
+            >
+              {ai ? "AI search on" : "Browse by hand"}
+            </motion.span>
+          </AnimatePresence>
+        </p>
+
+        <div className="relative mt-9">
+          <motion.span
+            aria-hidden
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ ...enter, delay: 0.7 }}
+            className="pointer-events-none absolute -inset-3 border border-dashed border-[#a8a8a1]"
+          >
+            {HANDLES.map((h) => (
+              <span key={h} className={`absolute h-2.5 w-2.5 border border-[#a8a8a1] bg-white ${h}`} />
+            ))}
+            <span className="t-mono absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded bg-[var(--blue)] px-2 py-0.5 text-white">
+              Hug × Hug
+            </span>
+          </motion.span>
+
+          <h1 className="text-[clamp(3rem,14vw,9.5rem)] font-extrabold leading-[0.9] tracking-[-0.05em]">
+            {LINES.map((line, i) => (
+              <span key={line} className="block overflow-hidden pb-[0.06em]">
+                <motion.span
+                  className="block"
+                  initial={{ y: "105%" }}
+                  animate={{ y: 0 }}
+                  transition={{ ...enter, stiffness: 110, delay: 0.1 + i * 0.09 }}
+                >
+                  {line}
+                </motion.span>
+              </span>
+            ))}
+          </h1>
+
+          <div className="absolute -bottom-6 right-[-14px]">
+            <Cursor color="#f2522e" label="Customer" />
+          </div>
+        </div>
+
+        <motion.p
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight text-neutral-900 leading-[0.95]"
+          transition={{ ...enter, delay: 0.75 }}
+          className="mt-16 max-w-md text-lg leading-snug tracking-[-0.01em] text-[var(--mute)] md:text-xl"
         >
-          Components <br />
-          <span className="font-light italic text-neutral-500 font-serif">that love</span> the web.
-        </motion.h1>
-        
-        <motion.p 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.8 }}
-          className="mt-6 text-base sm:text-lg text-neutral-600 max-w-xl mx-auto font-light"
-        >
-          High-end modular systems, live interactive canvas elements, and micro-interactions designed to make your interface look alive.
+          Hand-built interface components. Preview each one live,{" "}
+          <span className="t-serif text-[var(--ink)]">copy the code</span>, and ship it.
         </motion.p>
 
-        {/* Interactive Simulator Card (Right in the center to eliminate empty space) */}
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.3, duration: 0.8 }}
-          className="mt-10 max-w-2xl mx-auto bg-white border border-neutral-200 rounded-3xl p-6 shadow-xl text-left"
-        >
-          {/* Card Header Bar */}
-          <div className="flex items-center justify-between pb-4 border-b border-neutral-100">
-            <div className="flex items-center gap-2">
-              <button 
-                onClick={() => setActiveTab("preview")}
-                className={`px-3 py-1 text-xs font-mono rounded-lg transition-colors ${activeTab === "preview" ? "bg-neutral-900 text-white" : "text-neutral-500 hover:bg-neutral-100"}`}
-              >
-                Live Preview
-              </button>
-              <button 
-                onClick={() => setActiveTab("code")}
-                className={`px-3 py-1 text-xs font-mono rounded-lg transition-colors ${activeTab === "code" ? "bg-neutral-900 text-white" : "text-neutral-500 hover:bg-neutral-100"}`}
-              >
-                Snippet
-              </button>
-            </div>
-            <button 
-              onClick={handleCopy}
-              className="flex items-center gap-1.5 px-3 py-1 text-xs font-mono bg-neutral-50 border border-neutral-200 rounded-lg hover:bg-neutral-100 transition-colors"
-            >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-neutral-500" />}
-              <span>{copied ? "Copied" : "Copy Code"}</span>
-            </button>
-          </div>
-
-          {/* Card Body Content */}
-          <div className="pt-6 min-h-[160px] flex items-center justify-center">
-            <AnimatePresence mode="wait">
-              {activeTab === "preview" ? (
-                <motion.div 
-                  key="preview"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="w-full flex flex-col items-center justify-center"
-                >
-                  <div className={`w-full p-6 rounded-2xl border transition-all duration-500 flex items-center justify-between ${interactiveMode ? "bg-blue-50/50 border-blue-200 shadow-inner" : "bg-neutral-50 border-neutral-200"}`}>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md">
-                        <Sparkles className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-neutral-900">Dynamic Spring State</h4>
-                        <p className="text-xs text-neutral-500">Interactive physics damping active</p>
-                      </div>
-                    </div>
-                    <span className="px-3 py-1 bg-white border border-blue-200 text-blue-700 text-xs font-mono font-bold rounded-full shadow-xs">
-                      {interactiveMode ? "LIVE 60FPS" : "STATIC"}
-                    </span>
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.div 
-                  key="code"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="w-full bg-neutral-900 text-neutral-200 p-4 rounded-xl font-mono text-xs overflow-x-auto"
-                >
-                  <pre>{`import { motion } from "framer-motion";\n\nexport const SpringCard = () => (\n  <motion.div whileHover={{ scale: 1.02 }} className="p-6 bg-blue-50 rounded-2xl">\n    <h4>Dynamic Spring State</h4>\n  </motion.div>\n);`}</pre>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </motion.div>
-
-        {/* Action Button */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.8 }}
-          className="mt-8 flex justify-center gap-4"
+          transition={{ ...enter, delay: 0.85 }}
+          className="mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row"
         >
-          <a 
+          <a
             href="#catalog"
-            className="px-8 py-4 bg-neutral-900 text-white text-sm font-semibold rounded-full hover:bg-blue-600 transition-all shadow-md"
+            className="group inline-flex items-center justify-center gap-2 rounded-full bg-[var(--blue)] px-7 py-4 text-lg font-medium text-white transition-transform duration-200 active:scale-[0.98]"
           >
-            Explore Component Vault
+            Browse the vault
+            <ArrowUpRight
+              aria-hidden
+              className="h-5 w-5 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+            />
+          </a>
+          <a
+            href="#submit"
+            className="inline-flex items-center justify-center rounded-full border border-[var(--ink)] px-7 py-4 text-lg font-medium transition-colors duration-150 hover:bg-[var(--ink)] hover:text-white"
+          >
+            Submit yours
           </a>
         </motion.div>
       </div>
-
-      {/* Scattered Floating Canvas Elements (Only render if interactiveMode is true) */}
-      <AnimatePresence>
-        {interactiveMode && (
-          <div className="absolute inset-0 pointer-events-none max-w-7xl mx-auto hidden lg:block overflow-hidden">
-            
-            {/* Floating Notification Bubble 1 */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: [0, -10, 0] }}
-              exit={{ opacity: 0 }}
-              transition={{ y: { repeat: Infinity, duration: 5, ease: "easeInOut" } }}
-              className="absolute top-44 left-16 p-3 bg-white border border-neutral-200 rounded-2xl shadow-lg pointer-events-auto flex items-center gap-3"
-            >
-              <div className="w-7 h-7 rounded-full bg-black text-white flex items-center justify-center text-xs font-bold">
-                —
-              </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-neutral-900">Online</span>
-                  <span className="text-[10px] text-neutral-400">right now</span>
-                </div>
-                <p className="text-xs text-neutral-600">Let's build a clean component.</p>
-              </div>
-              <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-medium rounded-full">Developer</span>
-            </motion.div>
-
-            {/* Floating Tool Badge: VS Code */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: [0, 12, 0] }}
-              exit={{ opacity: 0 }}
-              transition={{ y: { repeat: Infinity, duration: 6, ease: "easeInOut", delay: 1 } }}
-              className="absolute top-52 right-24 p-3 bg-white border border-neutral-200 rounded-2xl shadow-lg pointer-events-auto flex items-center gap-2"
-            >
-              <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                <Code2 className="w-5 h-5" />
-              </div>
-              <span className="text-xs font-mono font-bold text-neutral-800">VS Code</span>
-            </motion.div>
-
-            {/* Floating Tool Badge: Layers */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: [0, -8, 0] }}
-              exit={{ opacity: 0 }}
-              transition={{ y: { repeat: Infinity, duration: 7, ease: "easeInOut", delay: 2 } }}
-              className="absolute bottom-32 left-28 p-3 bg-white border border-neutral-200 rounded-2xl shadow-lg pointer-events-auto flex items-center gap-2"
-            >
-              <div className="w-8 h-8 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center">
-                <Layers className="w-5 h-5" />
-              </div>
-              <span className="text-xs font-mono font-bold text-neutral-800">Design Systems</span>
-            </motion.div>
-
-            {/* Floating Mini UI Preview Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: [0, 10, 0], rotate: [-1, 1, -1] }}
-              exit={{ opacity: 0 }}
-              transition={{ y: { repeat: Infinity, duration: 8, ease: "easeInOut", delay: 0.5 } }}
-              className="absolute bottom-24 right-20 w-56 p-4 bg-white border border-neutral-200 rounded-2xl shadow-xl pointer-events-auto"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-mono text-neutral-400">ANALYTICS_MODULE</span>
-                <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
-              </div>
-              <div className="h-12 bg-neutral-50 rounded-lg flex items-end px-2 gap-1 pb-1">
-                <span className="w-full bg-blue-500 h-[40%] rounded-xs" />
-                <span className="w-full bg-blue-500 h-[70%] rounded-xs" />
-                <span className="w-full bg-blue-600 h-[90%] rounded-xs" />
-                <span className="w-full bg-blue-500 h-[60%] rounded-xs" />
-              </div>
-            </motion.div>
-
-          </div>
-        )}
-      </AnimatePresence>
-
     </section>
   );
 }
